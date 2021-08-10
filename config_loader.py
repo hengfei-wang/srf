@@ -91,7 +91,7 @@ def config_parser():
 
     # dataset options
     parser.add_argument("--dataset_type", type=str, default='DTU',
-                        help='options: llff / blender / deepvoxels / DTU')
+                        help='options: llff / blender / deepvoxels / DTU / xgaze')
     parser.add_argument("--testskip", type=int, default=8,
                         help='will load 1/N images from test/val sets, useful for large datasets like deepvoxels')
 
@@ -122,6 +122,8 @@ def config_parser():
                         help='set to render synthetic data on a white bkgd (always use for dvoxels)')
     parser.add_argument("--half_res", action='store_true',
                         help='load blender synthetic data at 400x400 instead of 800x800')
+    parser.add_argument("--res_rate", type=int, default=1,
+                        help='change resolution of input images')
 
     ## llff flags
     parser.add_argument("--factor", type=int, default=8,

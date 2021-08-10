@@ -16,7 +16,7 @@ class Implicit4D():
     def __init__(self, cfg, proj_pts_to_ref):
         self.proj_pts_to_ref = proj_pts_to_ref
         self.cfg = cfg
-        self.device = torch.device( "cuda")
+        self.device = torch.device("cuda")
         models = {'model1': Implicit4DNN }
         self.model = models[cfg.model](cfg, self.device)
         self.grad_vars = list(self.model.parameters())
@@ -36,7 +36,7 @@ class Implicit4D():
         self.optimizer = torch.optim.Adam(params=self.grad_vars, lr=cfg.lrate, betas=(0.9, 0.999))
 
 
-    def render_data(self, ref_images, ref_pts, rays_o, rays_d, viewdirs, z_vals, ref_poses, focal):
+    def render_data(self, ref_images, ref_pts, rays_o, rays_d, viewdirs, z_vals, ref_poses, ref_poses_idx, focal):
 
         def raw2outputs(raw, z_vals, rays_d, raw_noise_std=0, white_bkgd=False):
             raw2alpha = lambda raw, dists, act_fn=F.relu: 1. - torch.exp(-act_fn(raw) * dists)
@@ -77,6 +77,7 @@ class Implicit4D():
         rays_d = rays_d.to(self.device)  # (batch_size x  rays, 3)
         rays_o = rays_o.to(self.device)  # (batch_size x  rays, 3)
         ref_poses = ref_poses.to(self.device) # (batch_size x num_ref_views, 4, 4) np.array, f32
+        # ref_poses_idx = ref_poses_idx.to(self.device) # (batch_size x num_ref_views, 1)
 
         if self.cfg.N_importance > 0:
             # we need no gradients for the coarse model, as coarse and fine models are duplicates
@@ -97,7 +98,7 @@ class Implicit4D():
             if self.cfg.batch_size != 1:
                 raise ValueError('Not yet implemented. Next line accepts only single batch')
 
-            ref_pts = self.proj_pts_to_ref(pts, ref_poses, self.device, focal)
+            ref_pts = self.proj_pts_to_ref(pts, ref_poses, ref_poses_idx, self.device, focal)
 
             raw = self.model_fine(ref_images.float(), ref_pts.float())
 
@@ -123,13 +124,13 @@ class Implicit4D():
         return ret
 
 
-    def point_wise_3D_reconst(self, ref_images, ref_poses , w_pts, focal):
+    def point_wise_3D_reconst(self, ref_images, ref_poses , ref_poses_idx, w_pts, focal):
 
         ref_images = ref_images.to(self.device) # (batch_size x num_ref_views, H, W, 3)
         w_pts = w_pts.to(self.device) # (batch_size x num_ref_views, rays, num_samples, 2)
         ref_poses = ref_poses.to(self.device) # (batch_size x num_ref_views, 4, 4) np.array, f32
 
-        ref_pts = self.proj_pts_to_ref(w_pts, ref_poses, self.device, focal)
+        ref_pts = self.proj_pts_to_ref(w_pts, ref_poses, ref_poses_idx, self.device, focal)
 
         if self.cfg.batch_size != 1:
             raise ValueError('Not yet implemented. Next line accepts only single batch')
@@ -152,15 +153,16 @@ class Implicit4D():
         for batch in tqdm(data):
             # batch = [torch.Tensor(arr) for arr in batch]
             if specific_pose:
-                rel_ref_cam_locs, idx, focal = batch[-3:]
-
-                inputs = [tensor.reshape([-1] + list(tensor.shape[2:])) for tensor in batch[:-3]]
-            else:
-                rel_ref_cam_locs, target, idx, focal  = batch[-4:]
+                ref_poses_idx, rel_ref_cam_locs, idx, focal = batch[-4:]
+                print(f'In render_img: \n ref_poses_idx.shape: {ref_poses_idx.shape}')
                 inputs = [tensor.reshape([-1] + list(tensor.shape[2:])) for tensor in batch[:-4]]
+            else:
+                ref_poses_idx, rel_ref_cam_locs, target, idx, focal  = batch[-5:]
+                print(f'In render_img: \n ref_poses_idx.shape: {ref_poses_idx.shape}')
+                inputs = [tensor.reshape([-1] + list(tensor.shape[2:])) for tensor in batch[:-5]]
             focal = np.array(focal)
             rays_o, rays_d, viewdirs, pts, z_vals, ref_pts, ref_images, ref_poses = inputs
-            ret = self.render_data(ref_images, ref_pts, rays_o, rays_d, viewdirs, z_vals,  ref_poses, focal)
+            ret = self.render_data(ref_images, ref_pts, rays_o, rays_d, viewdirs, z_vals, ref_poses, ref_poses_idx, focal)
             # put all results into dictionary
             for k in ret:
                 if k not in all_ret:
@@ -304,7 +306,7 @@ class Implicit4DNN(nn.Module):
         self.fc_0 = nn.Linear(in_features=128, out_features=256)
         self.fc_1 = nn.Linear(in_features=256, out_features=128)
         self.fc_out = nn.Linear(in_features=128, out_features=4)
-        self.actvn = nn.ReLU()
+        self.actvn = nn.ReLU(inplace=True)
 
         self.maxpool = nn.MaxPool2d(2)
 

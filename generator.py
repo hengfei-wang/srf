@@ -1,9 +1,11 @@
 import torch
 import os
 import numpy as np
+from torch.utils import data
 from dataloader import SceneDataset
 import imageio
 import data.load_DTU as DTU
+import data.load_xgaze as xgaze
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -64,6 +66,7 @@ def render_pose(cfg, i4d, dataset, epoch, specific_obj, pose):
     dataloader.dataset.load_specific_rendering_pose = c2w
     print(f'generating {dataloader.dataset.load_specific_input}, pose: {pose[0]}')
     render_data = dataloader.__iter__().__next__()['complete']
+    print(f'In dataloader: \n ref_poses_idx.shape: {render_data[0][-4].shape}')
 
     render_and_save(i4d, dataset, render_data, savedir, img_outpath, True)
 
@@ -95,9 +98,9 @@ def render_and_save(i4d, dataset, render_data, savedir, img_outpath, specific_po
     if not os.path.exists(outpath):
         plt.figure(figsize=(50, 20), dpi=200)
         plt.xticks([]), plt.yticks([])
-        for i in range(10):
+        for i in range(8):
 
-            ax = plt.subplot(2, 5, i + 1)
+            ax = plt.subplot(2, 4, i + 1)
             ax.xaxis.set_visible(False)
             ax.yaxis.set_visible(False)
 
@@ -123,5 +126,9 @@ if __name__ == '__main__':
 
     if cfg.dataset_type == 'DTU':
         for scan in cfg.generate_specific_samples:
-            pose = DTU.load_cam_path()[cfg.gen_pose]
+          pose = DTU.load_cam_path()[cfg.gen_pose]
+          render_pose(cfg, i4d, dataset, i4d.start, scan, (cfg.gen_pose,pose))
+    if cfg.dataset_type == 'xgaze':
+        for scan in cfg.generate_specific_samples:
+            pose = xgaze.load_cam_path()[cfg.gen_pose]
             render_pose(cfg, i4d, dataset, i4d.start, scan, (cfg.gen_pose,pose))

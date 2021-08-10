@@ -123,13 +123,13 @@ def compute_loss(dataset_iterator, dataloader, global_step, cfg):
     # reshape batch_size dimension into data
     data_reshaped = [tensor.reshape([-1] + list(tensor.shape[2:])) for tensor in data[:-1]]
 
-    rays_o, rays_d, viewdirs, target_s, pts, z_vals, ref_pts, ref_images, rel_ref_cam_locs, ref_poses  = data_reshaped
+    rays_o, rays_d, viewdirs, target_s, pts, z_vals, ref_pts, ref_images, rel_ref_cam_locs, ref_poses, ref_poses_idx  = data_reshaped
     focal = np.array(data[-1])
 
     i4d.model.train()
     i4d.optimizer.zero_grad()
 
-    ret = i4d.render_data(ref_images, ref_pts, rays_o, rays_d, viewdirs, z_vals, ref_poses, focal)
+    ret = i4d.render_data(ref_images, ref_pts, rays_o, rays_d, viewdirs, z_vals, ref_poses, ref_poses_idx, focal)
 
     target_s = target_s.to(i4d.device)
 
