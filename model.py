@@ -305,7 +305,7 @@ class Implicit4DNN(nn.Module):
         self.fc_0 = nn.Linear(in_features=128, out_features=256)
         self.fc_1 = nn.Linear(in_features=256, out_features=128)
         self.fc_out = nn.Linear(in_features=128, out_features=4)
-        self.actvn = nn.ReLU()
+        self.actvn = nn.ReLU(inplace=True)
 
         self.maxpool = nn.MaxPool2d(2)
 

@@ -70,7 +70,7 @@ def config_parser():
 
     # dataset options
     parser.add_argument("--dataset_type", type=str, default='DTU',
-                        help='options: DTU')
+                        help='options: DTU/xgaze')
 
 
     parser.add_argument("--near", type=int, default=None,
@@ -95,6 +95,8 @@ def config_parser():
                         help='set to render synthetic data on a white bkgd (always use for dvoxels)')
     parser.add_argument("--half_res", action='store_true',
                         help='load blender synthetic data at 400x400 instead of 800x800')
+    parser.add_argument("--res_rate", type=int, default=1,
+                        help='set resolution of input images')
     parser.add_argument("--no_ndc", action='store_true',
                         help='use normalized device coordinates (set for non-forward facing scenes)')
     # this is set false in all cases in the paper

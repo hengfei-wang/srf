@@ -4,6 +4,7 @@ import numpy as np
 import os
 import random
 import data.load_DTU as DTU
+import data.load_xgaze as xgaze
 
 
 
@@ -53,6 +54,15 @@ class SceneDataset(Dataset):
             self.multi_world2cam = DTU.multi_world2cam_grid_sample_mat
             self.multi_world2cam_torch = DTU.multi_world2cam_grid_sample_mat_torch
             self.cam_path = DTU.load_cam_path()
+        if cfg.dataset_type == 'xgaze':
+            self.data, self.H, self.W, self.focal, self.cc, self.camera_system = xgaze.setup_xgaze(self.load_mode, cfg)
+            print(self.H, self.W, self.focal, self.cc, self.camera_system)
+
+            self.near = cfg.near
+            self.far = cfg.far
+            self.multi_world2cam = xgaze.multi_world2cam_grid_sample_mat
+            self.multi_world2cam_torch = xgaze.multi_world2cam_grid_sample_mat_torch
+            self.cam_path = xgaze.load_cam_path()
 
         # image generation setting -------------------------------------------------------------
         if self.cfg.video or self.cfg.eval:
@@ -66,7 +76,7 @@ class SceneDataset(Dataset):
 
     def proj_pts_to_ref(self, pts, ref_poses):
         ref_pts = []
-        if self.cfg.dataset_type == 'DTU':
+        if self.cfg.dataset_type == 'DTU' or self.cfg.dataset_type == 'xgaze':
             for ref_pose in ref_poses:
                 ref_pts.append([self.multi_world2cam(p.numpy(), ref_pose) for p in pts])
         else:
@@ -77,7 +87,7 @@ class SceneDataset(Dataset):
     def proj_pts_to_ref_torch(self, pts, ref_poses, device, focal = None):
         ref_pts = torch.zeros((len(ref_poses), pts.shape[0],pts.shape[1],2)).to(device)
 
-        if self.cfg.dataset_type == 'DTU':
+        if self.cfg.dataset_type == 'DTU' or self.cfg.dataset_type == 'xgaze':
             for i, ref_pose in enumerate(ref_poses):
                 for j,p in enumerate(pts):
                     ref_pts[i,j] = self.multi_world2cam_torch(p, ref_pose,device)
@@ -123,6 +133,31 @@ class SceneDataset(Dataset):
                 target = imgs[-1]  # (H, W, 3) np.array, f32
                 target_pose = poses[-1] # (4,4) np.array, f32
 
+        if self.cfg.dataset_type == 'xgaze':
+
+            # for comparison of models we implement to load specific input/output data
+            if self.load_specific_input:
+                sample = self.load_specific_input
+            else:
+                sample = self.data[idx]
+
+            imgs, poses, poses_idx = xgaze.load_scan_data(sample, self.load_mode, self.num_reference_views + 1, self.cfg,
+                                                        self.load_specific_reference_poses, self.load_fixed,
+                                                        self.shuffle)
+            ref_images = imgs[:self.cfg.num_reference_views] # (num_ref_views, H, W, 3) np.array, f32
+            ref_poses_idx = poses_idx[:self.cfg.num_reference_views]  # (num_reference_views) list, str
+            ref_poses = poses[:self.cfg.num_reference_views] # (num_ref_views, 4, 4) np.array, f32
+
+            if self.load_specific_rendering_pose is not None:
+                target_pose = self.load_specific_rendering_pose
+            # elif self.fine_tune:
+            #     # select on of the 10 input views as target
+            #     sampled_target = np.random.randint(1, self.cfg.num_reference_views + 1)
+            #     target = imgs[sampled_target]  # (H, W, 3) np.array, f32
+            #     target_pose = poses[sampled_target] # (4,4) np.array, f32
+            else:
+                target = imgs[-1]  # (H, W, 3) np.array, f32
+                target_pose = poses[-1] # (4,4) np.array, f32
         else:
             raise
 
