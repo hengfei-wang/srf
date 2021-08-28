@@ -79,14 +79,14 @@ class SceneDataset(Dataset):
 
     def proj_pts_to_ref_torch(self, pts, ref_poses, ref_poses_idx, device, focal = None):
         ref_pts = torch.zeros((len(ref_poses), pts.shape[0],pts.shape[1],2)).to(device)
-        print(f'In "proj_pts_to_ref_torch" \nref_poses_idx.shape: {ref_poses_idx.shape}\nref_poses.shape: {ref_poses.shape}')
+        # print(f'In "proj_pts_to_ref_torch" \nref_poses_idx.shape: {ref_poses_idx.shape}\nref_poses.shape: {ref_poses.shape}')
 
         if self.cfg.dataset_type == 'DTU' or self.cfg.dataset_type == 'xgaze':
-            for i, (ref_pose, ref_pose_idx) in enumerate(zip(ref_poses, ref_poses_idx.reshape(-1))):
+            for i, (ref_pose, ref_pose_idx) in enumerate(zip(ref_poses, ref_poses_idx)):
                 for j,p in enumerate(pts):
                     ref_pts[i,j] = self.multi_world2cam_torch(p, ref_pose, ref_pose_idx, device)
         else:
-            for i, (ref_pose, ref_pose_idx) in enumerate(zip(ref_poses, ref_poses_idx.reshape(-1))):
+            for i, (ref_pose, ref_pose_idx) in enumerate(zip(ref_poses, ref_poses_idx)):
                 for j, p in enumerate(pts):
                     ref_pts[i,j] = self.multi_world2cam_torch(p, self.H, self.W, focal[0], ref_pose, ref_pose_idx, device)
         return ref_pts  # (num_ref_views, rays, num_samples, 2)
@@ -170,7 +170,7 @@ class SceneDataset(Dataset):
 
             ref_pts = self.proj_pts_to_ref(pts, ref_poses, ref_poses_idx)
 
-            print(f'Before dataloader:\n np.array(ref_poses_idx).shape: {np.array(ref_poses_idx).shape}, {np.array(ref_poses_idx)}')
+            # print(f'Before dataloader:\n np.array(ref_poses_idx).shape: {np.array(ref_poses_idx).shape}, {np.array(ref_poses_idx)}')
 
             if self.load_specific_rendering_pose is None:
                 output['complete'] = [[rays_o[i:i+N_rays_test], rays_d[i:i+N_rays_test], viewdirs[i:i+N_rays_test],pts[i:i+N_rays_test],

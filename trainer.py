@@ -121,10 +121,11 @@ def compute_loss(dataset_iterator, dataloader, global_step, cfg):
         data = data['complete']
 
     # reshape batch_size dimension into data
+    # 终于找到最终原因了，dataloader出来的数据加上了batch_size的维度，也就是说一条数据（本项目下是一个列表）中的所有张量都加上了一个维度，这里做了处理，将该维度取消了，fuck，但是
     data_reshaped = [tensor.reshape([-1] + list(tensor.shape[2:])) for tensor in data[:-1]]
 
     rays_o, rays_d, viewdirs, target_s, pts, z_vals, ref_pts, ref_images, rel_ref_cam_locs, ref_poses, ref_poses_idx  = data_reshaped
-    focal = np.array(data[-1])
+    focal = np.array(data[-1])# 此处focal应该也有一个额外的batch_size维度，但是后面的函数直接用的全局变量，并没有用到这个数据
 
     i4d.model.train()
     i4d.optimizer.zero_grad()

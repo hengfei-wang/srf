@@ -66,7 +66,7 @@ def render_pose(cfg, i4d, dataset, epoch, specific_obj, pose):
     dataloader.dataset.load_specific_rendering_pose = c2w
     print(f'generating {dataloader.dataset.load_specific_input}, pose: {pose[0]}')
     render_data = dataloader.__iter__().__next__()['complete']
-    print(f'In render_pose, After dataloader: \n ref_poses_idx.shape: {render_data[0][-4].shape}, {render_data[0][-4]}')
+    # print(f'In render_pose, After dataloader: \n ref_poses_idx.shape: {render_data[0][-4].shape}, {render_data[0][-4]}')
 
     render_and_save(i4d, dataset, render_data, savedir, img_outpath, True)
 
