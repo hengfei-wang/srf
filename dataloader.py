@@ -170,7 +170,7 @@ class SceneDataset(Dataset):
 
             ref_pts = self.proj_pts_to_ref(pts, ref_poses, ref_poses_idx)
 
-            print(f'In dataloader:\n np.array(ref_poses_idx).shape: {np.array(ref_poses_idx).shape}')
+            print(f'Before dataloader:\n np.array(ref_poses_idx).shape: {np.array(ref_poses_idx).shape}, {np.array(ref_poses_idx)}')
 
             if self.load_specific_rendering_pose is None:
                 output['complete'] = [[rays_o[i:i+N_rays_test], rays_d[i:i+N_rays_test], viewdirs[i:i+N_rays_test],pts[i:i+N_rays_test],

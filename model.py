@@ -154,11 +154,11 @@ class Implicit4D():
             # batch = [torch.Tensor(arr) for arr in batch]
             if specific_pose:
                 ref_poses_idx, rel_ref_cam_locs, idx, focal = batch[-4:]
-                print(f'In render_img: \n ref_poses_idx.shape: {ref_poses_idx.shape}')
+                # print(f'In render_img: \n ref_poses_idx.shape: {ref_poses_idx.shape}')
                 inputs = [tensor.reshape([-1] + list(tensor.shape[2:])) for tensor in batch[:-4]]
             else:
                 ref_poses_idx, rel_ref_cam_locs, target, idx, focal  = batch[-5:]
-                print(f'In render_img: \n ref_poses_idx.shape: {ref_poses_idx.shape}')
+                # print(f'In render_img: \n ref_poses_idx.shape: {ref_poses_idx.shape}')
                 inputs = [tensor.reshape([-1] + list(tensor.shape[2:])) for tensor in batch[:-5]]
             focal = np.array(focal)
             rays_o, rays_d, viewdirs, pts, z_vals, ref_pts, ref_images, ref_poses = inputs
