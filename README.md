@@ -65,7 +65,7 @@ Start to train a model with a specific configuration file using:
 python trainer.py --config configs/train_DTU.txt
 ```
 
-#### Fine-tuning
+### Fine-tuning
 Next we optimize a model trained in the previous step on a specific scene given by 11 test images.
 
 Create a new experiment folder containing the trained model:
