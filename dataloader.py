@@ -68,6 +68,7 @@ class SceneDataset(Dataset):
             self.far = cfg.far
             self.multi_world2cam = xgaze.multi_world2cam_grid_sample_mat
             self.multi_world2cam_torch = xgaze.multi_world2cam_grid_sample_mat_torch
+            self.cam_path = xgaze.load_cam_path()
 
 
     def __len__(self):

@@ -1,6 +1,6 @@
 expname = train_DTU
 basedir = ./logs
-datadir = ./data/DTU_MVS/
+datadir = /data/data/DTU_MVS/
 dataset_type = DTU
 
 no_ndc = True
