@@ -10,3 +10,4 @@ slurm
 *.out
 *.zip
 trash
+.DS_Store
